@@ -132,8 +132,8 @@ function spawnWorld() {
   gameState.bullets = [];
   gameState.pickups = [];
   gameState.teammates = [];
-  gameState.initialBotCount = Math.floor(rand(5, 15));
-  const numIslands = Math.floor(rand(50, 100));
+  gameState.initialBotCount = Math.floor(rand(5, 10));
+  const numIslands = Math.floor(rand(20, 50));
 
   for (let i = 0; i < numIslands; i++) {
     gameState.islands.push(createIsland(gameState.islands));
@@ -535,8 +535,8 @@ for (const p of gameState.pickups) {
 }
 
 // Spawn pickups only if below limits
-const MAX_EXP = 3000;
-const MAX_HEALTH = 500;
+const MAX_EXP = 1000;
+const MAX_HEALTH = 200;
 
 if (expCount < MAX_EXP) {
   for (let i = 0; i < (MAX_EXP - expCount); i++) {
@@ -695,6 +695,7 @@ socket.on('move', (data) => {
     delete gameState.players[socket.id];
   });
 });
+// server.listen(3000, () => console.log('Server running on http://localhost:3000'));
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 gameLoop();
