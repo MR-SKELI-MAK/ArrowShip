@@ -1,3 +1,4 @@
+window.addEventListener('DOMContentLoaded', () => {
 const socket = io('wss://arrowship.up.railway.app');
 
 let myId = null;
@@ -896,4 +897,5 @@ document.getElementById('instaLink').addEventListener('click', function(e) {
     }, 500);
     e.preventDefault();
   }
+});
 });
