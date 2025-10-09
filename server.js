@@ -14,8 +14,8 @@ app.get('/', (req, res) => {
 const io = socketIO(server);
 
 const TAU = Math.PI * 2;
-const WORLD_W = 12000;
-const WORLD_H = 12000;
+const WORLD_W = 6000;
+const WORLD_H = 6000;
 const SHIP_COLLISION_RADIUS = 16;
 const BULLET_DAMAGE = 20;
 const BULLET_SPEED = 8;
