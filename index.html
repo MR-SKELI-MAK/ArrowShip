@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="icon" type="image/png" href="favicon.jpg">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="main.js"></script>
+  
+  <title>Arrow Ship</title>
+  <style>
+   
+  </style>
+</head>
+<body>
+  <div class="app">
+    <canvas id="c"></canvas>
+    <div id="usernameAboveShip"></div>
+
+    <div class="hud panel">
+      <h1><div  id="usernameHud">Username: Player</div></h1>
+      <div class="mini" id="health">Health: 0%</div>
+      <div class="mini" id="score">Score: 0</div>
+      <div class="mini" id="elimination">Elimination: 0</div>
+      <div class="mini" id="ship">Ships: 0</div>
+      <div class="mini" id="island">Islands: 0</div>
+    </div>
+    
+    <!-- Leaderboard HTML Structure -->
+    <div id="leaderboard" class="leaderboard panel">
+        <center><h3>Leaderboard </h3></center>
+        <ul id="leaderboardList">
+            <!-- Dynamic content will be generated here by JavaScript -->
+        </ul>
+  
+    <!-- End Leaderboard HTML Structure -->
+     </div>
+    
+<!-- In-Game Menu Button (only visible during game) -->
+<button id="inGameMenuBtn" class="botton" style="position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:30; display:none;"><i class="fa-solid fa-pause"></i></button>
+
+    <footer>
+      <div class="upgrade-buttons" id="upgradeButtonsContainer">
+          <button class="upgrade-button" data-upgrade="health" data-color="health">
+              <span class="title" style="color:var(--health);">+50 Health</span><br>
+              <span class="mini" id="health-status">Max: 100</span>
+          </button>
+          <button class="upgrade-button" data-upgrade="multishot" data-color="multishot">
+              <span class="title" style="color:var(--multishot);">Dual Cannon</span><br>
+              <span class="mini" id="multishot-status">Not Acquired</span>
+          </button>
+          <button class="upgrade-button" data-upgrade="speedyfire" data-color="speedyfire">
+              <span class="title" style="color:var(--fire);">+20% Fire Rate</span><br>
+              <span class="mini" id="speedyfire-status">Rate: 1x</span>
+          </button>
+          <button class="upgrade-button disabled" data-upgrade="teammate" data-color="teammate">
+              <span class="title" style="color:var(--teammate);">Teammate (Lvl 5)</span><br>
+              <span class="mini" id="teammate-status">Locked</span>
+          </button>
+      </div>
+      <div class="level-bar-container">
+        <div id="levelText">
+            <span id="current-level">Level 0</span>
+            <span id="exp-info">0 / 10 Exp</span>
+        </div>
+        <div class="exp-bar"><div class="exp-fill" style="width: 0%;"></div></div>
+      </div>
+    </footer>
+
+
+
+    <div id="overlay">
+      <div class="menu panel">
+        <center><h2>Arrow Ship </h2></center><center>
+  <a href="https://www.instagram.com/_skeli.thoughts_/" 
+     id="instaLink"
+     target="_blank"
+     rel="noopener noreferrer">
+    by MR_SKELI_MAK
+  </a>
+</center>
+        <p class="mini" style="text-align: center;">Top-down ship combat: move, aim, shoot cannonballs, dodge islands, and Level Up to gain powerful upgrades!</p>
+      
+        <div style="height:12px"></div>
+        <div class="row" style="display:flex;gap:8px;justify-content:center;">
+          <label style="margin-right: 2%; font-weight:500;">Enter Username :</label>
+          <input id="usernameInput" type="text" placeholder="Player"  maxlength="20">
+        </div>
+        <div style="height:20px"></div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+         <button class="botton" style="flex-grow: 1" id="tutorialBtn">Quick Tutorial</button>
+         <button class="botton" style="flex-grow: 1" id="settingsBtn">Settings</button>
+          <button class="botton" style="flex-grow: 1" id="startBtn">Start Game</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" style="display: none;">
+      <div class="menu panel">
+        <center>
+          <h2 id="endGameTitle">VICTORY!</h2>
+          <p id="endGameMessage" class="mini">You have eliminated all enemy ships.</p>
+        </center>
+        <div style="height: 12px;"></div>
+        <div class="row">
+          <div id="endGameInfo" style="width: 100%; text-align: center;">
+            <p>Username: <span id="endGameUsername"></span></p>
+            <p>Level: <span id="finalLevel" style="color: var(--health);">0</span></p>
+            <p>Eliminations: <span id="eliminations" style="color: var(--health);" >0</span></p>
+            <p>Final Score: <span id="finalScore" style="color: var(--health);">0</span></p>
+          </div>
+        </div>
+        <div style="height: 12px;"></div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="botton" id="playAgainBtn">Play Again</button>
+          <button class="botton" id="returnToMenuBtn">Menu</button>
+        </div>
+      </div>
+    </div>
+    
+
+    <div id="messageBox" style="display: none;">
+      <div class="menu panel">
+        <center><h3 id="messageTitle">Tutorial</h3></center>
+        <p class="mini" id="messageText"></p>
+        <div style="height: 12px;"></div>
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="botton" id="closeMessageBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+  
+ <div id="settingsOverlay" style="display: none; position: fixed; inset: 0; z-index: 20; background: rgba(10,14,20,0.5); align-items: center; justify-content: center;">
+  <div class="menu panel" style="max-height: 80vh; overflow-y: auto;">
+    <center><h3>Settings</h3></center>
+    <div style="margin: 12px 0;">
+      <label style="display:block;margin-bottom:6px;">Button Volume: <span id="buttonVolumeValue">100</span>%</label>
+      <input type="range" id="buttonVolume" min="0" max="100" value="50" style="width:100%;">
+    </div>
+    <div style="margin: 12px 0;">
+      <label style="display:block;margin-bottom:6px;">Music Volume: <span id="musicVolumeValue">100</span>%</label>
+      <input type="range" id="musicVolume" min="0" max="100" value="50" style="width:100%;">
+    </div>
+    <hr>
+    <center><h3>Credits</h3></center>
+    <div style="margin: 12px 0; font-size: 15px; color: var(--muted);">
+      <p>This game is developed by <b>MR_SKELI_MAK</b>.</p>
+      <p>Music credits: <br>
+        <b>Shattered Dungeon</b> &amp; <b>Minecraft</b>
+      </p>
+      <p>If you have any further ideas, let me know on &ensp;
+        <a href="https://www.instagram.com/_skeli.thoughts_/" 
+           id="instaLink"
+           target="_blank"
+           rel="noopener noreferrer"
+           style="background: radial-gradient(circle at 33% 100%, #fed373 4%, #f15245 30%, #d92e7f 62%, #9b36b7 85%, #515ecf);-webkit-background-clip: text;
+background-clip: text;
+color: transparent;">
+          <i class="fa-brands fa-instagram"></i>
+        </a><b><i>Instagram</i></b>
+      </p>
+    </div>
+    <div style="height: 12px;"></div>
+    <div style="display: flex; justify-content: flex-end; position: sticky; bottom: 0;">
+      <button class="botton" id="closeSettingsBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- In-Game Dialog -->
+<div id="inGameDialog" style="display:none; position:fixed; inset:0; z-index:40; background:rgba(10,14,20,0.5); align-items:center; justify-content:center;">
+  <div class="menu panel">
+    <center><h3>Game Paused</h3></center>
+    <div style="height:12px"></div>
+    <div style="margin: 12px 0;">
+  <label style="display:block;margin-bottom:6px;">Button Volume: <span id="buttonVolumeValueInGame">100</span>%</label>
+  <input type="range" id="buttonVolumeInGame" min="0" max="100" value="50" style="width:100%;">
+</div>
+<div style="margin: 12px 0;">
+  <label style="display:block;margin-bottom:6px;">Music Volume: <span id="musicVolumeValueInGame">100</span>%</label>
+  <input type="range" id="musicVolumeInGame" min="0" max="100" value="50" style="width:100%;">
+</div>
+    <div style="height:12px"></div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="botton" id="resumeBtn">Resume</button>
+      <button class="botton" id="quitToMenuBtn">Quit to Menu</button>
+    </div>
+  </div>
+</div>
+
+<audio id="buttonClickSound" src="click.ogg" preload="auto"></audio>
+<audio id="music1" src="1.mp3" preload="auto" loop ></audio>
+<audio id="killSound" src="player die.mp3" preload="auto"></audio>
+<audio id="levelUpSound" src="levelup.mp3" preload="auto"></audio>
+<audio id="upgradeSound" src="upraded.mp3" preload="auto"></audio>
+
+  <div id="rotateDeviceOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:#0b1220;color:#fff;align-items:center;justify-content:center;font-size:2em;">
+    <div style="text-align:center;">
+      <i class="fa-solid fa-rotate fa-2x"></i><br>
+      Please rotate your device to <b>landscape</b> to play!
+    </div>
+  </div>
+  <div class="app">
+    <canvas id="c"></canvas>
+  </div>
+  <!-- Joystick for mobile -->
+  <div id="joystickContainer">
+    <div id="joystickBase"></div>
+    <div id="joystickKnob"></div>
+  </div>
+</body>
+
+</html>
+
+
+

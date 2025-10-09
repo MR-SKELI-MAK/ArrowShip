@@ -1,0 +1,437 @@
+ /* CSS for styling the game UI */
+    :root {
+      --bg: #0b1220;
+      --ui: rgba(10, 14, 20, 0.5);
+      --accent: #53c6f7;
+      --muted: #9aa7b2;
+      --health: #10b981; /* Green */
+      --fire: #f87171; /* Red */
+      --multishot: #facc15; /* Yellow */
+      --teammate: #a78bfa; /* Purple */
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+      overflow: hidden; /* Prevent body scroll */
+    }
+    .app {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      background: linear-gradient(180deg, var(--bg), #07101a);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #07202a, #021018);
+      image-rendering: pixelated; /* Good choice for 2D games */
+      cursor: none; /* Hide default cursor to use custom crosshair */
+    }
+    /* HUD & Panel Styles */
+    .hud {
+      position: fixed;
+      left: 18px;
+      top: 18px;
+      color: #dbeafe;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .panel {
+      background: rgba(10, 14, 20, 0.5);
+      padding: 8px 12px;
+      border-radius: 10px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 6px 18px rgba(2, 6, 10, 0.6);
+       border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      margin: 0;
+      font-size: 14px;
+    }
+    button {
+     background: rgba(10, 14, 20, 0.5);
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+      font-weight: bold;
+
+    }
+    button:hover {
+        background: rgba(10, 14, 20, 0.5);
+       box-shadow: 
+    0 0 10px var(--accent); /* Outer glow */
+    border: 2px solid var(--accent); /* Brighter border */
+  
+    }
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    /* Overlay and Menu Styles */
+    #overlay, #gameOverOverlay, #messageBox {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      background: rgba(10, 14, 20, 0.5);
+    }
+    .menu {
+      
+      padding: 22px;
+      border-radius: 12px;
+      color: #e6f6ff;
+      box-shadow: 0 10px 40px rgba(2, 6, 10, 0.6);
+      width: 420px;
+      background: var(--ui); /* Ensure menu background is solid for readability */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .menu h2 {
+      margin: 0 0 8px 0;
+      font-size: 50px;
+      font-weight: 900;
+    }
+    .row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    } 
+    input {
+    outline: none;
+    border: none;
+background-color: none;
+text-decoration: none;
+}
+    input[type="text"] {
+      background: rgba(10, 14, 20, 0);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: 60%;
+      margin-left: 1%;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.493);
+      border-radius: 0%;
+    }
+    #usernameAboveShip {
+      position: fixed;
+      background: rgba(10, 14, 20, 0.5);
+      padding: 4px 8px;
+      border-radius: 8px;
+      color: #dbeafe;
+      font-size: 12px;
+      transform: translate(-50%, -150%); 
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 5;
+    }
+
+    /* --- FOOTER & LEVEL BAR STYLES --- */
+    footer {
+      position: fixed; 
+      bottom: 0; 
+      left: 50%; 
+      transform: translateX(-50%);
+      padding: 10px 0;
+      text-align: center;
+      z-index: 5;
+    }
+    .level-bar-container {
+      width: 520px; /* Increased width to accommodate upgrades */
+      margin: 0 auto;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(10, 14, 20, 0.8);
+      box-shadow: 0 4px 12px rgba(2, 6, 10, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #levelText {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .exp-bar {
+      height: 8px;
+      background-color: var(--ui);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .exp-fill {
+      height: 100%;
+      background-color: var(--health);
+      transition: width 0.3s ease;
+    }
+
+    /* --- ALWAYS-VISIBLE UPGRADE BUTTONS --- */
+    .upgrade-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      outline: none;
+    }
+    .upgrade-button {
+        background: var(--ui);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        color: #e6f6ff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 11px;
+        line-height: 1;
+        transition: all 0.15s;
+        box-shadow: 0 3px 6px rgba(2, 6, 10, 0.4);
+    }
+    .upgrade-button:hover {
+        transform: translateY(-1px);
+    }
+    .upgrade-button.ready {
+        animation: pulse 1.5s infinite;
+    }
+    .upgrade-button.ready:hover {
+        animation: none;
+    }
+    .upgrade-button.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+        border-color: rgba(255, 255, 255, 0.315);
+        transform: none;
+        background: var(--ui);
+        color: #888 !important;
+    }
+            /* Leaderboard container styling */
+       .leaderboard {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    top: auto;
+    left: auto;
+    z-index: 20;
+    color: #dbeafe;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+         transition: opacity 0.4s;
+
+}
+        
+        /* Title styling */
+        .leaderboard h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            color: var(--accent);
+        }
+
+        /* List styling */
+        .leaderboard ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+        
+        /* Individual list item (row) styling */
+        .leaderboard li {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaderboard li:last-child {
+            border-bottom: none;
+        }
+        
+
+        /* Rank number column */
+        .leaderboard .rank {
+            width: 30px;
+            font-weight: bold;
+        }
+        
+        /* Name column */
+        .leaderboard .name {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Score/Stats column */
+        .leaderboard .stats {
+            width: 80px;
+            text-align: right;
+            color: var(--health);
+        }
+        
+        /* Special styling for the player's rank if they are outside the Top 5 */
+        .leaderboard .player-rank {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--health);  /* Highlighted color */
+            font-weight: bold;
+        }
+        .leaderboard.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+input[type="range"]#musicVolume,
+input[type="range"]#musicVolumeInGame,
+ input[type="range"]#buttonVolume,
+input[type="range"]#buttonVolumeInGame {
+  accent-color: var(--accent);
+
+}
+
+    /* Color coding for buttons */
+    .upgrade-button[data-color="health"] { border-color: var(--health); }
+    .upgrade-button[data-color="multishot"] { border-color: var(--multishot); }
+    .upgrade-button[data-color="speedyfire"] { border-color: var(--fire); }
+    .upgrade-button[data-color="teammate"] { border-color: var(--teammate); }
+
+    /* Pulse animation for available upgrades */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(31, 182, 255, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(31, 182, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(31, 182, 255, 0); }
+    }
+
+
+    @media (orientation: portrait) {
+      #rotateDeviceOverlay {
+        display: flex !important;
+      }
+      .app, canvas, .hud, .panel, .leaderboard, footer, #overlay, #gameOverOverlay, #messageBox, #settingsOverlay, #inGameDialog {
+        display: none !important;
+      }
+    }
+    /* Joystick styles - smaller for mobile */
+    #joystickContainer {
+      position: fixed;
+      left: 4vw;
+      bottom: 6vw;
+      width: 70px;
+      height: 70px;
+      z-index: 100;
+      display: none;
+      touch-action: none;
+      opacity: 0.92;
+    }
+    #joystickBase {
+      width: 100%;
+      height: 100%;
+      background: rgba(80,120,180,0.13);
+      border-radius: 50%;
+      position: absolute;
+    }
+    #joystickKnob {
+      width: 34px;
+      height: 34px;
+      background: rgba(80,180,255,0.7);
+      border-radius: 50%;
+      position: absolute;
+      left: 18px; top: 18px;
+      transition: left 0.08s, top 0.08s;
+      touch-action: none;
+    } a{
+      text-decoration: none;
+      color: var(--muted);
+    }
+
+/* --- TIGHTER UPGRADE BUTTONS, WIDER EXP BAR, SLIGHTLY LARGER LEADERBOARD FOR MOBILE --- */
+@media (max-width: 900px) {
+  
+  .upgrade-buttons {
+    gap: 3.5px !important;
+    margin-bottom: 0.5px !important;
+    flex-wrap: wrap !important;
+    padding: 0 !important;
+    border-radius: 8%;
+  }
+  .upgrade-button {
+    font-size: 7.5px !important;
+    min-width: 12vw !important;
+    max-width: 16vw !important;
+    padding: 0.5px 0.5px !important;
+    border-radius: 9.5px !important;
+  }
+  .level-bar-container {
+    width: 320px !important; /* wider exp bar */
+    max-width: 75vw !important;
+    padding: 3px 4px !important;
+    border-radius: 6px !important;
+    font-size: 10px !important;
+  }
+  .exp-bar {
+    height: 5px !important;
+    border-radius: 2px !important;
+    margin-top: 2px !important;
+  }
+  .leaderboard.panel, #leaderboard.leaderboard.panel {
+    width: 30vw !important; /* slightly larger */
+    min-width: 30px !important;
+    max-width: 38vw !important;
+    font-size: 9px !important;
+    right: 0.5vw !important;
+    bottom: 0.5vw !important;
+    border-radius: 4px !important;
+    padding: 1.5px 1.5px !important;
+  }
+  .leaderboard h3 {
+    font-size: 12px !important;
+  }
+  .leaderboard ul {
+    font-size: 9px !important;
+  }
+  
+}
+@media (max-width: 600px) {
+   .app, canvas {
+    transform: scale(0.85);
+    transform-origin: top left;
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+  body, html {
+    overflow: auto !important;
+  }
+  .upgrade-button {
+    font-size: 5px !important;
+    min-width: 28vw !important;
+    max-width: 36vw !important;
+    padding: 0.5px 0.5px !important;
+    border-radius: 1px !important;
+  }
+  .level-bar-container {
+    width: 99vw !important;
+    max-width: 99vw !important;
+  }
+  .exp-bar {
+    height: 4px !important;
+  }
+  .leaderboard.panel, #leaderboard.leaderboard.panel {
+    width: 30vw !important;
+    min-width: 20px !important;
+    max-width: 56vw !important;
+    font-size: 7px !important;
+    padding: 1px 1px !important;
+    border-radius: 2px !important;
+  }
+  .leaderboard h3 {
+    font-size: 8px !important;
+  }
+  .leaderboard ul {
+    font-size: 7px !important;
+  }
+}
