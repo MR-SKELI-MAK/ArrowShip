@@ -200,9 +200,12 @@ function spawnWorld() {
     gameState.bots.push(createShip(p.x, p.y, '#ffadad', true , false));
   }
 }
-
+let lastTime = Date.now();
 // --- GAME LOOP ---
 function gameLoop() {
+   const now = Date.now();
+  const dt = Math.min((now - lastTime) / (1000 / 60), 2); // dt = 1 at 60fps, clamp to avoid spiral of death
+  lastTime = now;
   // --- Bot AI ---
  for (const bot of gameState.bots) {
   let nearestPlayer = null;
@@ -225,8 +228,8 @@ function gameLoop() {
     bot.angle += clamp(da, -bot.turnSpeed, bot.turnSpeed);
 
     // Momentum: accelerate in facing direction
-    bot.vx += Math.cos(bot.angle) * bot.thrust;
-    bot.vy += Math.sin(bot.angle) * bot.thrust;
+bot.vx += Math.cos(bot.angle) * bot.thrust * dt;
+bot.vy += Math.sin(bot.angle) * bot.thrust * dt;
 
     // Fire
     if (bot.reload <= 0 && dist(bot, nearestPlayer) < 400) {
@@ -310,8 +313,8 @@ for (const teammate of gameState.teammates) {
     let da = (angleToTarget - teammate.angle + Math.PI) % TAU - Math.PI;
     teammate.angle += clamp(da, -teammate.turnSpeed, teammate.turnSpeed);
 
-    teammate.vx += Math.cos(teammate.angle) * teammate.thrust * 0.08;
-    teammate.vy += Math.sin(teammate.angle) * teammate.thrust * 0.08;
+teammate.vx += Math.cos(teammate.angle) * teammate.thrust * 0.08 * dt;
+teammate.vy += Math.sin(teammate.angle) * teammate.thrust * 0.08 * dt;
 
     // Friction
     teammate.vx *= 0.98;
@@ -411,12 +414,12 @@ for (const pid in gameState.players) {
 
     // Forward/backward thrust
     if (moveDir === 1) {
-      p.vx += Math.cos(angle) * p.thrust;
-      p.vy += Math.sin(angle) * p.thrust;
-    } else if (moveDir === -1) {
-      p.vx -= Math.cos(angle) * p.thrust * 0.5; // Backward is half speed
-      p.vy -= Math.sin(angle) * p.thrust * 0.5;
-    }
+        p.vx += Math.cos(angle) * p.thrust * dt;
+        p.vy += Math.sin(angle) * p.thrust * dt;
+      } else if (moveDir === -1) {
+        p.vx -= Math.cos(angle) * p.thrust * 0.5 * dt;
+        p.vy -= Math.sin(angle) * p.thrust * 0.5 * dt;
+      }
     // Friction
     p.vx *= 0.98;
     p.vy *= 0.98;
@@ -474,8 +477,8 @@ for (let s of allShips) {
 // Update bullets
 
 for (const bullet of gameState.bullets) {
-  bullet.x += bullet.vx;
-  bullet.y += bullet.vy;
+bullet.x += bullet.vx * dt;
+bullet.y += bullet.vy * dt;
   bullet.life -= 1;
   if (
     bullet.life <= 0 ||
@@ -798,5 +801,4 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
 gameLoop();
-
 
