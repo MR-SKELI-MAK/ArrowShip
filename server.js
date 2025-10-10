@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const app = express();
-const server = http.createServer(app); // <-- create server first!
+const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
     origin: "*",
@@ -16,8 +16,59 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// --- GRID PARTITIONING ---
+const GRID_SIZE = 400;
+function getCell(x, y) {
+  return {
+    cx: Math.floor(x / GRID_SIZE),
+    cy: Math.floor(y / GRID_SIZE)
+  };
+}
+let entityGrid = {};
+function updateEntityGrid() {
+  entityGrid = {};
+  // Add bots
+  for (const bot of gameState.bots) {
+    const {cx, cy} = getCell(bot.x, bot.y);
+    const key = `${cx},${cy}`;
+    if (!entityGrid[key]) entityGrid[key] = [];
+    entityGrid[key].push({ ...bot, _type: 'bot' });
+  }
+  // Add pickups
+  for (const p of gameState.pickups) {
+    const {cx, cy} = getCell(p.x, p.y);
+    const key = `${cx},${cy}`;
+    if (!entityGrid[key]) entityGrid[key] = [];
+    entityGrid[key].push({ ...p, _type: 'pickup' });
+  }
+  // Add islands
+  for (const isl of gameState.islands) {
+    const {cx, cy} = getCell(isl.x, isl.y);
+    const key = `${cx},${cy}`;
+    if (!entityGrid[key]) entityGrid[key] = [];
+    entityGrid[key].push({ ...isl, _type: 'island' });
+  }
+  // Add teammates
+  for (const tm of gameState.teammates) {
+    const {cx, cy} = getCell(tm.x, tm.y);
+    const key = `${cx},${cy}`;
+    if (!entityGrid[key]) entityGrid[key] = [];
+    entityGrid[key].push({ ...tm, _type: 'teammate' });
+  }
+}
+function getNearbyEntities(player, type) {
+  const {cx, cy} = getCell(player.x, player.y);
+  let nearby = [];
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      const key = `${cx+dx},${cy+dy}`;
+      if (entityGrid[key]) nearby = nearby.concat(entityGrid[key]);
+    }
+  }
+  return nearby.filter(e => e._type === type);
+}
 
-
+// --- CONSTANTS ---
 const TAU = Math.PI * 2;
 const WORLD_W = 6000;
 const WORLD_H = 6000;
@@ -27,17 +78,17 @@ const BULLET_SPEED = 8;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
-const NUM_ISLANDS = 6;
-const NUM_BOTS = 4;
-const MAX_EXP = 25;
-const MAX_HEALTH = 10;
+const NUM_ISLANDS = 10;
+const NUM_BOTS = 5;
+const MAX_EXP = 80;
+const MAX_HEALTH = 20;
+
 // --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function rand(a = 0, b = 1) { return a + Math.random() * (b - a); }
 function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
 function distSq(a, b) { const dx = a.x - b.x, dy = a.y - b.y; return dx * dx + dy * dy }
 function dist(a, b) { return Math.sqrt(distSq(a, b)); }
-
 function findClearPosition(islands, minR = 12) {
   let attempts = 0;
   let p;
@@ -52,7 +103,6 @@ function findClearPosition(islands, minR = 12) {
   }
   return null;
 }
-
 function getExpNeeded(lvl) {
   if (lvl === 0) return 0;
   return LEVEL_POINTS_BASE * (2 ** (lvl - 1));
@@ -60,8 +110,7 @@ function getExpNeeded(lvl) {
 
 // --- GAME STATE ---
 let gameState = {
-  
-  players: {}, // socket.id -> player object
+  players: {},
   bots: [],
   bullets: [],
   islands: [],
@@ -70,17 +119,13 @@ let gameState = {
   leaderboard: [],
   initialBotCount: 0,
 };
-
-
-      spawnWorld();
-    
+spawnWorld();
 
 // --- ENTITY HELPERS ---
 function createIsland(islands) {
   const p = findClearPosition(islands, 68) || { x: WORLD_W / 2, y: WORLD_H / 2 };
   return { x: p.x, y: p.y, r: rand(30, 75), color: '#155' };
 }
-// server.js
 function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
   return {
     id,
@@ -93,12 +138,12 @@ function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
     maxHealth: 100,
     health: 100,
     reload: 0,
-    reloadTimeBase: isBot ? BOT_RELOAD_TIME : 50,
+    reloadTimeBase: isBot ? BOT_RELOAD_TIME : 25,
     isBot,
     isTeammate,
     speed: isBot ? 0 :(isTeammate ? 0 : 3.68),
-    turnSpeed: isTeammate ? 0.05 : 0.04, // Lower turn speed for teammate
-    thrust: isTeammate ? 0.2 : (isBot ? 0.12 : 0.98), // Lower thrust for teammate
+    turnSpeed: isTeammate ? 0.05 : 0.04,
+    thrust: isTeammate ? 0.2 : (isBot ? 0.12 : 0.98),
     roamTarget: null,
     roamTimer: 300,
     username: isBot ? null : null,
@@ -112,19 +157,17 @@ function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
     eliminations: 0,
   };
 }
-
 function createPickup(x, y, type) {
    return {
     x, y,
     type,
-    t: 600,
-    regen: type === 'health' ? 0 : 0, // We'll set regen on pickup
-    points: type === 'health' ? 0 : randInt(1, 2),
-    r: 8,
+    t: 1200,
+    regen: type === 'health' ? 0 : 0,
+    points: type === 'health' ? 0 : randInt(5, 10),
+    r: 9,
     color: type === 'health' ? '#a8ffb8' : '#8dd5ff'
   };
 }
-
 function createBullet(x, y, angle, ownerId, ownerType) {
   return {
     x, y,
@@ -146,9 +189,8 @@ function spawnWorld() {
   gameState.bullets = [];
   gameState.pickups = [];
   gameState.teammates = [];
-  gameState.initialBotCount = NUM_BOTS; // Use your constant
-  const numIslands = NUM_ISLANDS;       // Use your constant
-
+  gameState.initialBotCount = NUM_BOTS;
+  const numIslands = NUM_ISLANDS;
   for (let i = 0; i < numIslands; i++) {
     gameState.islands.push(createIsland(gameState.islands));
   }
@@ -160,7 +202,6 @@ function spawnWorld() {
 
 // --- GAME LOOP ---
 function gameLoop() {
-  console.log('Game loop tick', Date.now());
   // --- Bot AI ---
  for (const bot of gameState.bots) {
   let nearestPlayer = null;
@@ -583,42 +624,48 @@ if (healthCount < MAX_HEALTH) {
   }
 }  gameState.pickups = gameState.pickups.filter(p => !p._destroy);
 
+  updateEntityGrid();
+
+  // --- Per-player filtered emit using grid ---
   for (const pid in gameState.players) {
-  const player = gameState.players[pid];
-  if (!player) continue;
+    const player = gameState.players[pid];
+    if (!player) continue;
 
-  // Increase margin for more vision
-  const isNear = (e, margin = 600) =>
-    Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
+    // Use grid for filtering
+    const visibleBots = getNearbyEntities(player, 'bot');
+    const visiblePickups = getNearbyEntities(player, 'pickup');
+    const visibleIslands = getNearbyEntities(player, 'island');
+    const visibleTeammates = getNearbyEntities(player, 'teammate');
+    // Bullets: still filter by distance (or add to grid if you want)
+    const isNear = (e, margin = 600) =>
+      Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
+    const visibleBullets = gameState.bullets.filter(b => isNear(b));
+    const visiblePlayers = {};
+    for (const opid in gameState.players) {
+      if (isNear(gameState.players[opid])) visiblePlayers[opid] = gameState.players[opid];
+    }
 
-  const visibleBots = gameState.bots.filter(bot => isNear(bot));
-  const visibleBullets = gameState.bullets.filter(b => isNear(b));
-  const visibleIslands = gameState.islands.filter(isl => isNear(isl));
-  const visiblePickups = gameState.pickups.filter(p => isNear(p));
-  const visibleTeammates = gameState.teammates.filter(tm => isNear(tm));
-  const visiblePlayers = {};
-  for (const opid in gameState.players) {
-    if (isNear(gameState.players[opid])) visiblePlayers[opid] = gameState.players[opid];
-  }
+    // Minimap data (all entities, always)
     const minimapData = {
-  players: Object.values(gameState.players).map(p => ({ x: p.x, y: p.y, id: p.id })),
-  bots: gameState.bots.map(b => ({ x: b.x, y: b.y })),
-  pickups: gameState.pickups.map(p => ({ x: p.x, y: p.y, type: p.type })),
-  islands: gameState.islands.map(i => ({ x: i.x, y: i.y, r: i.r })),
-  teammates: gameState.teammates.map(tm => ({ x: tm.x, y: tm.y }))
-};
-  io.to(pid).emit('gameState', {
-    players: visiblePlayers,
-    bots: visibleBots,
-    bullets: visibleBullets,
-    islands: visibleIslands,
-    pickups: visiblePickups,
-    leaderboard: gameState.leaderboard,
-    initialBotCount: gameState.initialBotCount,
-    teammates: visibleTeammates,
-    minimap: minimapData,
-  });
-}
+      players: Object.values(gameState.players).map(p => ({ x: p.x, y: p.y, id: p.id })),
+      bots: gameState.bots.map(b => ({ x: b.x, y: b.y })),
+      pickups: gameState.pickups.map(p => ({ x: p.x, y: p.y, type: p.type })),
+      islands: gameState.islands.map(i => ({ x: i.x, y: i.y, r: i.r })),
+      teammates: gameState.teammates.map(tm => ({ x: tm.x, y: tm.y }))
+    };
+
+    io.to(pid).emit('gameState', {
+      players: visiblePlayers,
+      bots: visibleBots,
+      bullets: visibleBullets,
+      islands: visibleIslands,
+      pickups: visiblePickups,
+      leaderboard: gameState.leaderboard,
+      initialBotCount: gameState.initialBotCount,
+      teammates: visibleTeammates,
+      minimap: minimapData,
+    });
+  }
 // Place this BEFORE removing dead players!
 const playerIds = Object.keys(gameState.players);
 const aliveBots = gameState.bots.filter(b => b.health > 0);
@@ -633,12 +680,15 @@ if (
 }
   // Remove dead players
   for (const pid in gameState.players) {
-    const p = gameState.players[pid];
-    if (p.health <= 0) {
-      io.to(pid).emit('dead');
-      delete gameState.players[pid];
-    }
+  const p = gameState.players[pid];
+  if (p.health <= 0) {
+    // Spawn health and exp at death location
+    gameState.pickups.push(createPickup(p.x, p.y, 'health'));
+    gameState.pickups.push(createPickup(p.x + rand(-20, 20), p.y + rand(-20, 20), 'exp'));
+    io.to(pid).emit('dead');
+    delete gameState.players[pid];
   }
+}
 
   // Leaderboard
 gameState.leaderboard = Object.values(gameState.players)
@@ -730,14 +780,14 @@ socket.on('move', (data) => {
 
   socket.on('disconnect', () => {
     delete gameState.players[socket.id];
+      // If no players left, respawn world
+    if (Object.keys(gameState.players).length === 0) {
+      spawnWorld();
+    }
   });
 });
-// server.listen(3000, () => console.log('Server running on http://localhost:3000'));
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
-
+server.listen(3000, () => console.log('Server running on http://localhost:3000'));
+// const PORT = process.env.PORT || 8080;
+// server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 gameLoop();
-
-
-
 
