@@ -231,13 +231,22 @@ color: transparent;">
        data-ad-slot="YOUR_MOBILE_SLOT"
        data-ad-format="auto"
        data-full-width-responsive="true"></ins>
-  <script>
-    (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
+ <script>
+  function loadAdWhenVisible(adId) {
+    var adDiv = document.getElementById(adId);
+    if (adDiv && adDiv.offsetWidth > 0) {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    } else {
+      setTimeout(function() { loadAdWhenVisible(adId); }, 500);
+    }
+  }
+  loadAdWhenVisible('leftMenuAd');
+</script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
