@@ -1,17 +1,21 @@
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
-
 const app = express();
-const server = http.createServer(app);
-// Serve static files (like index.html, sounds, favicon)
+const server = http.createServer(app); // <-- create server first!
+const io = socketIO(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 const path = require('path');
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-const io = socketIO(server);
+
 
 const TAU = Math.PI * 2;
 const WORLD_W = 6000;
@@ -22,7 +26,11 @@ const BULLET_SPEED = 8;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
-
+const NUM_ISLANDS = 10;
+const NUM_BOTS = 5;
+const MAX_EXP = 30;
+const MAX_HEALTH = 5;
+// --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function rand(a = 0, b = 1) { return a + Math.random() * (b - a); }
 function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
@@ -51,6 +59,7 @@ function getExpNeeded(lvl) {
 
 // --- GAME STATE ---
 let gameState = {
+  
   players: {}, // socket.id -> player object
   bots: [],
   bullets: [],
@@ -60,6 +69,10 @@ let gameState = {
   leaderboard: [],
   initialBotCount: 0,
 };
+
+
+      spawnWorld();
+    
 
 // --- ENTITY HELPERS ---
 function createIsland(islands) {
@@ -132,8 +145,8 @@ function spawnWorld() {
   gameState.bullets = [];
   gameState.pickups = [];
   gameState.teammates = [];
-  gameState.initialBotCount = Math.floor(rand(5, 10));
-  const numIslands = Math.floor(rand(20, 50));
+  gameState.initialBotCount = NUM_BOTS; // Use your constant
+  const numIslands = NUM_ISLANDS;       // Use your constant
 
   for (let i = 0; i < numIslands; i++) {
     gameState.islands.push(createIsland(gameState.islands));
@@ -146,6 +159,7 @@ function spawnWorld() {
 
 // --- GAME LOOP ---
 function gameLoop() {
+  console.log('Game loop tick', Date.now());
   // --- Bot AI ---
  for (const bot of gameState.bots) {
   let nearestPlayer = null;
@@ -511,8 +525,6 @@ for (const teammate of gameState.teammates) {
     }
   }
 }
-
-// ...existing code...
   // Remove destroyed bullets/bots
   gameState.bullets = gameState.bullets.filter(b => !b._destroy);
   gameState.bots = gameState.bots.filter(b => !b._destroy);
@@ -522,7 +534,7 @@ for (const teammate of gameState.teammates) {
     if (tm.ownerId && gameState.players[tm.ownerId]) {
       gameState.players[tm.ownerId].hasTeammate = false;
     }
-    return false; // Remove
+    return false;
   }
   return true;
 });
@@ -534,9 +546,7 @@ for (const p of gameState.pickups) {
   if (p.type === 'health') healthCount++;
 }
 
-// Spawn pickups only if below limits
-const MAX_EXP = 1000;
-const MAX_HEALTH = 200;
+
 
 if (expCount < MAX_EXP) {
   for (let i = 0; i < (MAX_EXP - expCount); i++) {
@@ -571,7 +581,37 @@ if (healthCount < MAX_HEALTH) {
     }
   }
 }  gameState.pickups = gameState.pickups.filter(p => !p._destroy);
-  
+
+  for (const pid in gameState.players) {
+  const player = gameState.players[pid];
+  if (!player) continue;
+
+  // Helper to check if entity is near player
+  const isNear = (e, margin = 800) =>
+    Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
+
+  // Filter entities near this player
+  const visibleBots = gameState.bots.filter(bot => isNear(bot));
+  const visibleBullets = gameState.bullets.filter(b => isNear(b));
+  const visibleIslands = gameState.islands.filter(isl => isNear(isl));
+  const visiblePickups = gameState.pickups.filter(p => isNear(p));
+  const visibleTeammates = gameState.teammates.filter(tm => isNear(tm));
+  const visiblePlayers = {};
+  for (const opid in gameState.players) {
+    if (isNear(gameState.players[opid])) visiblePlayers[opid] = gameState.players[opid];
+  }
+
+  io.to(pid).emit('gameState', {
+    players: visiblePlayers,
+    bots: visibleBots,
+    bullets: visibleBullets,
+    islands: visibleIslands,
+    pickups: visiblePickups,
+    leaderboard: gameState.leaderboard,
+    initialBotCount: gameState.initialBotCount,
+    teammates: visibleTeammates,
+  });
+}
 // Place this BEFORE removing dead players!
 const playerIds = Object.keys(gameState.players);
 const aliveBots = gameState.bots.filter(b => b.health > 0);
@@ -603,37 +643,27 @@ gameState.leaderboard = Object.values(gameState.players)
     rankValue: p.score + p.eliminations * 100,
   }))
   .sort((a, b) => b.rankValue - a.rankValue);
-  // Broadcast game state
-  io.emit('gameState', {
-    players: gameState.players,
-    bots: gameState.bots,
-    bullets: gameState.bullets,
-    islands: gameState.islands,
-    pickups: gameState.pickups,
-    leaderboard: gameState.leaderboard,
-    initialBotCount: gameState.initialBotCount,
-    teammates: gameState.teammates,
-  });
-
-  setTimeout(gameLoop, 1000 / 30); // 120 FPS
+  setTimeout(gameLoop, 1000 / 60); // 60 FPS
 }
 
 // --- SOCKET HANDLERS ---
 io.on('connection', (socket) => {
-  // On join, spawn player
+ console.log('New connection:', socket.id);
   socket.on('join', (username) => {
-    // --- FIX: Always respawn the world on join if no players are left ---
-    if (Object.keys(gameState.players).length === 0) {
-      spawnWorld();
-    }
+    console.log('Player joined:', username, socket.id);
+  
     const pPos = findClearPosition(gameState.islands, 50) || { x: WORLD_W / 2, y: WORLD_H / 2 };
     gameState.players[socket.id] = createShip(pPos.x, pPos.y, '#8bd3ff', false , socket.id);
     gameState.players[socket.id].username = username;
+      console.log('Player added:', Object.keys(gameState.players));
+  console.log('Player health after join:', gameState.players[socket.id].health);
+  console.log('Player position after join:', pPos);
   });
 
   // Player input: movement, angle, shooting
 socket.on('move', (data) => {
   const p = gameState.players[socket.id];
+  console.log('Move event from', socket.id, data);
   if (!p) return;
   // Store next move for momentum logic
   p.nextMove = data;
@@ -698,5 +728,6 @@ socket.on('move', (data) => {
 // server.listen(3000, () => console.log('Server running on http://localhost:3000'));
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
+
 gameLoop();
 

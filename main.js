@@ -1,7 +1,6 @@
 window.addEventListener('DOMContentLoaded', () => {
 const socket = io('wss://arrowship.up.railway.app');
-
-
+// https://drearisome-lilith-englacially.ngrok-free.dev
 let myId = null;
 let otherPlayers = [];
 let bots = [];
@@ -25,6 +24,7 @@ socket.on('connect', () => {
 });
 
 socket.on('gameState', (state) => {
+   console.log('Received gameState', state);
   otherPlayers = Object.entries(state.players)
     .filter(([id, p]) => id !== myId)
     .map(([id, p]) => p);
@@ -111,6 +111,14 @@ function updateHUD() {
   document.getElementById('elimination').innerText = 'Elimination: ' + (player ? player.eliminations : 0);
   document.getElementById('ship').innerText = 'Ships:' + (player ? 1 : 0 + bots.length);
   document.getElementById('island').innerText = 'Islands: ' + islands.length;
+}
+
+function isNearPlayer(entity, margin = 400) {
+  if (!player) return false;
+  return (
+    Math.abs(entity.x - player.x) < margin &&
+    Math.abs(entity.y - player.y) < margin
+  );
 }
 
 function updateLevelBar() {
@@ -236,7 +244,7 @@ function draw() {
   // --- Subtle grid ---
   ctx.save();
   ctx.globalAlpha = 0.07;
-  ctx.strokeStyle = '#1d9db9';
+  ctx.strokeStyle = '#02d1ffff';
   ctx.lineWidth = 1;
   const step = 200;
   for (let x = Math.floor((camera.x - W / 2) / step) * step; x < camera.x + W / 2 + step; x += step) {
@@ -254,12 +262,13 @@ function draw() {
   ctx.restore();
 
   // World boundary
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = 'rgba(21, 105, 105, 1)';
   ctx.lineWidth = 4;
   ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
 
   // --- Organic islands ---
 for (let isl of islands) {
+  if (!isNearPlayer(isl, 600)) continue;
   ctx.save();
   ctx.translate(isl.x, isl.y);
   ctx.beginPath();
@@ -280,6 +289,7 @@ for (let isl of islands) {
 
   // Pickups
   for (let p of pickups) {
+    if (!isNearPlayer(p, 600)) continue;
     ctx.beginPath();
     ctx.fillStyle = p.color;
     ctx.arc(p.x, p.y, p.r, 0, TAU);
@@ -288,6 +298,7 @@ for (let isl of islands) {
 
   // Bullets
   for (let b of bullets) {
+    if (!isNearPlayer(b, 600)) continue;
     ctx.beginPath();
     ctx.fillStyle = '#ffd6a5';
     ctx.arc(b.x, b.y, b.r, 0, TAU);
@@ -296,6 +307,7 @@ for (let isl of islands) {
 
   // Bots
   for (let bot of bots) {
+    if (!isNearPlayer(bot, 600)) continue;
     ctx.save();
     ctx.translate(bot.x, bot.y);
     ctx.rotate(bot.angle);
@@ -316,6 +328,7 @@ for (let isl of islands) {
   }
   // After bots, before your player
 for (let tm of teammates) {
+  if (!isNearPlayer(tm, 600)) continue;
   ctx.save();
   ctx.translate(tm.x, tm.y);
   ctx.rotate(tm.angle);
@@ -336,6 +349,7 @@ for (let tm of teammates) {
 }
   // Other players
   for (let op of otherPlayers) {
+    if (!isNearPlayer(op, 600)) continue;
   // Draw ship
   ctx.save();
   ctx.translate(op.x, op.y);
@@ -408,13 +422,13 @@ ctx.restore();
   ctx.restore();
 
   // Mini map (top right)
-  const miniW = 150, miniH = 150;
+  const miniW = 100, miniH = 100;
   const miniX = W - miniW - 24;
   const miniY = 24;
   ctx.save();
   ctx.globalAlpha = 0.85;
   ctx.fillStyle = "#07101a";
-  ctx.strokeStyle = "#53c6f7";
+  ctx.strokeStyle = "rgba(21, 105, 105, 1)";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.rect(miniX, miniY, miniW, miniH);
@@ -563,21 +577,13 @@ function fireLoop(t) {
 requestAnimationFrame(fireLoop);
 
 document.getElementById('startBtn').addEventListener('click', () => {
+  if (socket.connected) socket.disconnect();
+  socket.connect();
   playerName = document.getElementById('usernameInput').value || 'Player';
   socket.emit('join', playerName);
   usernameAboveShipEl.innerText = playerName;
   usernameHudEl.innerText = 'Username: ' + playerName;
   document.getElementById('overlay').style.display = 'none';
-  gameState = 'playing';
-  document.getElementById('leaderboard').classList.remove('hidden');
-});
-
-document.getElementById('playAgainBtn').addEventListener('click', () => {
-  playerName = document.getElementById('usernameInput').value || 'Player';
-  socket.emit('join', playerName); 
-  usernameAboveShipEl.innerText = playerName;
-  usernameHudEl.innerText = 'Username: ' + playerName;
-  document.getElementById('gameOverOverlay').style.display = 'none';
   gameState = 'playing';
   document.getElementById('leaderboard').classList.remove('hidden');
 });
@@ -666,12 +672,10 @@ function endGame(status) {
     title.innerText = "VICTORY!";
     title.setAttribute('style', 'text-shadow:0 0 10px var(--multishot);color: var(--multishot);');
     message.innerText = `Congratulations!! You have defeated all ${totalShips} ships! GGZ!`;
-    document.getElementById('playAgainBtn').style.display = 'none'; // Hide Play Again on victory
-  } else {
+    } else {
     title.innerText = "DEFEAT!";
     title.setAttribute('style', 'text-shadow:0 0 10px var(--fire);color: var(--fire);');
     message.innerText = `Well played! Your ship has been destroyed.`;
-    document.getElementById('playAgainBtn').style.display = 'inline-block'; // Show Play Again on defeat
   }
 
   document.getElementById('endGameUsername').innerText = playerName;
