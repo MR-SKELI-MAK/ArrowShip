@@ -1,6 +1,6 @@
 window.addEventListener('DOMContentLoaded', () => {
-const socket = io('');
-// wss://arrowship.up.railway.app
+const socket = io('wss://arrowship.up.railway.app');
+// 
 // https://drearisome-lilith-englacially.ngrok-free.dev
 let myId = null;
 let otherPlayers = [];
