@@ -28,7 +28,7 @@ const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
 const NUM_ISLANDS = 10;
 const NUM_BOTS = 5;
-const MAX_EXP = 500;
+const MAX_EXP = 100;
 const MAX_HEALTH = 50;
 // --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
@@ -736,4 +736,5 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
 gameLoop();
+
 
