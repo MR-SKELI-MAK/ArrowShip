@@ -74,7 +74,7 @@ const WORLD_W = 6000;
 const WORLD_H = 6000;
 const SHIP_COLLISION_RADIUS = 16;
 const BULLET_DAMAGE = 20;
-const BULLET_SPEED = 8;
+const BULLET_SPEED = 12;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
@@ -119,6 +119,7 @@ let gameState = {
   leaderboard: [],
   initialBotCount: 0,
 };
+let gameActive = true;
 spawnWorld();
 
 // --- ENTITY HELPERS ---
@@ -138,12 +139,12 @@ function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
     maxHealth: 100,
     health: 100,
     reload: 0,
-    reloadTimeBase: isBot ? BOT_RELOAD_TIME : 25,
+    reloadTimeBase: isBot ? BOT_RELOAD_TIME : 35,
     isBot,
     isTeammate,
-    speed: isBot ? 0 :(isTeammate ? 0 : 3.68),
+    speed: isBot ? 0 :(isTeammate ? 0 : 6.68),
     turnSpeed: isTeammate ? 0.05 : 0.04,
-    thrust: isTeammate ? 0.2 : (isBot ? 0.12 : 0.98),
+    thrust: isTeammate ? 0.3 : (isBot ? 0.12 : 0.98),
     roamTarget: null,
     roamTimer: 300,
     username: isBot ? null : null,
@@ -177,7 +178,7 @@ function createBullet(x, y, angle, ownerId, ownerType) {
     r: 5,
     ownerId,
     ownerType,
-    life: 500,
+    life: 400,
     damage: BULLET_DAMAGE,
   };
 }
@@ -676,6 +677,7 @@ if (
 ) {
   const winnerId = playerIds[0];
   io.to(winnerId).emit('gameOver', { status: 'win' });
+  gameActive = false;
   // Optionally, you can emit 'lose' to others, but there are none left
 }
   // Remove dead players
@@ -708,7 +710,11 @@ io.on('connection', (socket) => {
  console.log('New connection:', socket.id);
   socket.on('join', (username) => {
     console.log('Player joined:', username, socket.id);
-  
+     // If world ended or no players, respawn world
+  if (!gameActive || Object.keys(gameState.players).length === 0) {
+    spawnWorld();
+    gameActive = true;
+  }
     const pPos = findClearPosition(gameState.islands, 50) || { x: WORLD_W / 2, y: WORLD_H / 2 };
     gameState.players[socket.id] = createShip(pPos.x, pPos.y, '#8bd3ff', false , socket.id);
     gameState.players[socket.id].username = username;
@@ -783,6 +789,7 @@ socket.on('move', (data) => {
       // If no players left, respawn world
     if (Object.keys(gameState.players).length === 0) {
       spawnWorld();
+      gameActive = false;
     }
   });
 });

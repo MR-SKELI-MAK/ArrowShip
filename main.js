@@ -641,7 +641,7 @@ quitToMenuBtn.addEventListener('click', () => {
   player = null;
   playButtonClick();
   disableUpgradeButtons();
-  
+  socket.disconnect();
 });
 
 // --- Message Box ---
