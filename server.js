@@ -17,6 +17,7 @@ app.get('/', (req, res) => {
 });
 
 
+
 const TAU = Math.PI * 2;
 const WORLD_W = 6000;
 const WORLD_H = 6000;
@@ -26,10 +27,10 @@ const BULLET_SPEED = 8;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
-const NUM_ISLANDS = 10;
-const NUM_BOTS = 5;
-const MAX_EXP = 100;
-const MAX_HEALTH = 50;
+const NUM_ISLANDS = 6;
+const NUM_BOTS = 4;
+const MAX_EXP = 25;
+const MAX_HEALTH = 10;
 // --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function rand(a = 0, b = 1) { return a + Math.random() * (b - a); }
@@ -95,9 +96,9 @@ function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
     reloadTimeBase: isBot ? BOT_RELOAD_TIME : 50,
     isBot,
     isTeammate,
-    speed: isBot ? 0 :(isTeammate ? 0 : 6.68),
+    speed: isBot ? 0 :(isTeammate ? 0 : 3.68),
     turnSpeed: isTeammate ? 0.05 : 0.04, // Lower turn speed for teammate
-    thrust: isTeammate ? 0.2 : (isBot ? 0.12 : 1.48), // Lower thrust for teammate
+    thrust: isTeammate ? 0.2 : (isBot ? 0.12 : 0.98), // Lower thrust for teammate
     roamTarget: null,
     roamTimer: 300,
     username: isBot ? null : null,
@@ -587,7 +588,7 @@ if (healthCount < MAX_HEALTH) {
   if (!player) continue;
 
   // Increase margin for more vision
-  const isNear = (e, margin = 1800) =>
+  const isNear = (e, margin = 600) =>
     Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
 
   const visibleBots = gameState.bots.filter(bot => isNear(bot));
@@ -736,6 +737,7 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
 gameLoop();
+
 
 
 
