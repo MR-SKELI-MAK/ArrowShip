@@ -74,7 +74,7 @@ const WORLD_W = 6000;
 const WORLD_H = 6000;
 const SHIP_COLLISION_RADIUS = 16;
 const BULLET_DAMAGE = 20;
-const BULLET_SPEED = 10;
+const BULLET_SPEED = 9;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
@@ -142,9 +142,9 @@ function createShip(x, y, color, isBot = false, isTeammate = false, id = null) {
     reloadTimeBase: isBot ? BOT_RELOAD_TIME : 35,
     isBot,
     isTeammate,
-    speed: isBot ? 0 :(isTeammate ? 0 : 5.68),
+    speed: isBot ? 0 :(isTeammate ? 0 : 0.68),
     turnSpeed: isTeammate ? 0.05 : 0.04,
-    thrust: isTeammate ? 0.2 : (isBot ? 0.6 : 0.68),
+    thrust: isTeammate ? 0.2 : (isBot ? 0.09 : 0.68),
     roamTarget: null,
     roamTimer: 300,
     username: isBot ? null : null,
@@ -796,7 +796,7 @@ socket.on('move', (data) => {
     }
   });
 });
-// server.listen(3000, () => console.log('Server running on http://localhost:3000'));
+//server.listen(3000, () => console.log('Server running on http://localhost:3000'));
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
