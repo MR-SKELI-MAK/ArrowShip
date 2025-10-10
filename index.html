@@ -6,11 +6,37 @@
   <link rel="stylesheet" href="style.css"/>
   <link rel="icon" type="image/png" href="favicon.jpg">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7615725875001394"
+     crossorigin="anonymous"></script>
   <title>Arrow Ship</title>
 </head>
 <body>
   <div class="app">
     <canvas id="c"></canvas>
+     <!-- Left Vertical Ad (OUTSIDE overlay) -->
+    <div id="leftMenuAd" style="position:fixed;left:0;top:0;height:100vh;width:160px;display:flex;align-items:center;justify-content:center;z-index:100;">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-7615725875001394"
+           data-ad-slot="6470806166"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+    <!-- Right Vertical Ad (OUTSIDE overlay) -->
+    <div id="rightMenuAd" style="position:fixed;right:0;top:0;height:100vh;width:160px;display:flex;align-items:center;justify-content:center;z-index:100;">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-7615725875001394"
+           data-ad-slot="6470806166"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
     <div id="usernameAboveShip"></div>
 
     <div class="hud panel">
@@ -198,7 +224,16 @@ color: transparent;">
     <div id="joystickBase"></div>
     <div id="joystickKnob"></div>
   </div>
-
+<div id="mobileBannerAd" style="display:none; position:fixed; bottom:0; left:0; width:100vw; z-index:100;">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-7615725875001394"
+       data-ad-slot="YOUR_MOBILE_SLOT"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>
 </body>

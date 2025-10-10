@@ -435,3 +435,21 @@ input[type="range"]#buttonVolumeInGame {
     font-size: 7px !important;
   }
 }
+ #leftMenuAd, #rightMenuAd {
+      width: 160px;
+      min-width: 120px;
+      max-width: 160px;
+      height: 100vh;
+    }
+    @media (max-width: 900px) {
+      #leftMenuAd, #rightMenuAd {
+        width: 90px;
+        min-width: 60px;
+        max-width: 90px;
+      }
+    }
+    @media (max-width: 600px) {
+      #leftMenuAd, #rightMenuAd {
+        display: none !important;
+      }
+    }

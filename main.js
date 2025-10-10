@@ -105,6 +105,16 @@ function getExpNeeded(lvl) {
   return 10 * (2 ** (lvl - 1));
 }
 
+
+ function showMenuAds(show) {
+      document.getElementById('leftMenuAd').style.display = show ? 'flex' : 'none';
+      document.getElementById('rightMenuAd').style.display = show ? 'flex' : 'none';
+    }
+    showMenuAds(true);
+
+    function showMobileBannerAd(show) {
+  document.getElementById('mobileBannerAd').style.display = show ? 'block' : 'none';
+}
 // --- HUD & UPGRADE UI ---
 function updateHUD() {
   document.getElementById('health').innerText = player ? `Health: ${Math.round(player.health)}% (Max: ${maxHealth})` : 'Health: DEAD';
@@ -576,6 +586,7 @@ function fireLoop(t) {
 requestAnimationFrame(fireLoop);
 
 document.getElementById('startBtn').addEventListener('click', () => {
+  showMenuAds(false);
   if (socket.connected) socket.disconnect();
   socket.connect();
   playerName = document.getElementById('usernameInput').value || 'Player';
