@@ -1,6 +1,7 @@
 window.addEventListener('DOMContentLoaded', () => {
 const socket = io('wss://arrowship.up.railway.app');
 // https://drearisome-lilith-englacially.ngrok-free.dev
+
 let myId = null;
 let otherPlayers = [];
 let bots = [];
@@ -30,7 +31,7 @@ socket.on('gameState', (state) => {
     .map(([id, p]) => p);
 
   player = state.players[myId];
-
+  minimap = state.minimap || { players: [], bots: [], pickups: [], islands: [], teammates: [] };
   bots = state.bots;
   bullets = state.bullets;
   islands = state.islands;
@@ -94,7 +95,7 @@ let keys = {};
 let mouse = { x: 0, y: 0, down: false };
 let playerName = 'Player';
 let camera = { x: WORLD_W / 2, y: WORLD_H / 2 };
-
+let minimap = { players: [], bots: [], pickups: [], islands: [], teammates: [] };
 // --- UTILITY FUNCTIONS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)) }
 function distSq(a, b) { const dx = a.x - b.x, dy = a.y - b.y; return dx * dx + dy * dy }
@@ -435,17 +436,36 @@ ctx.restore();
   ctx.fill();
   ctx.stroke();
 
-  // Islands
-  for (let isl of islands) {
-    const mx = miniX + (isl.x / WORLD_W) * miniW;
-    const my = miniY + (isl.y / WORLD_H) * miniH;
-    ctx.beginPath();
-    ctx.arc(mx, my, Math.max(2, isl.r * miniW / WORLD_W), 0, TAU);
-    ctx.fillStyle = isl.color || "#155";
-    ctx.fill();
-  }
+// Islands
+for (let isl of minimap.islands) {
+  const mx = miniX + (isl.x / WORLD_W) * miniW;
+  const my = miniY + (isl.y / WORLD_H) * miniH;
+  ctx.beginPath();
+  ctx.arc(mx, my, 2, 0, TAU);
+  ctx.fillStyle = "#155";
+  ctx.fill();
+}
+// Bots
+for (let bot of minimap.bots) {
+  const mx = miniX + (bot.x / WORLD_W) * miniW;
+  const my = miniY + (bot.y / WORLD_H) * miniH;
+  ctx.beginPath();
+  ctx.arc(mx, my, 4, 0, TAU);
+  ctx.fillStyle = "#ffadad";
+  ctx.fill();
+}
+// Other players
+for (let op of minimap.players) {
+  if (op.id === myId) continue;
+  const mx = miniX + (op.x / WORLD_W) * miniW;
+  const my = miniY + (op.y / WORLD_H) * miniH;
+  ctx.beginPath();
+  ctx.arc(mx, my, 5, 0, TAU);
+  ctx.fillStyle = "#ffeb3b";
+  ctx.fill();
+}
 // Teammates
-for (let tm of teammates) {
+for (let tm of minimap.teammates) {
   const mx = miniX + (tm.x / WORLD_W) * miniW;
   const my = miniY + (tm.y / WORLD_H) * miniH;
   ctx.beginPath();
@@ -453,39 +473,18 @@ for (let tm of teammates) {
   ctx.fillStyle = "#a78bfa";
   ctx.fill();
 }
-
-  // Bots
-  for (let bot of bots) {
-    const mx = miniX + (bot.x / WORLD_W) * miniW;
-    const my = miniY + (bot.y / WORLD_H) * miniH;
-    ctx.beginPath();
-    ctx.arc(mx, my, 4, 0, TAU);
-    ctx.fillStyle = "#ffadad";
-    ctx.fill();
-  }
-  // Other players
-  for (let op of otherPlayers) {
-    const mx = miniX + (op.x / WORLD_W) * miniW;
-    const my = miniY + (op.y / WORLD_H) * miniH;
-    ctx.beginPath();
-    ctx.arc(mx, my, 5, 0, TAU);
-    ctx.fillStyle = "#ffeb3b";
-    ctx.fill();
-  }
-  // Your player
-  if (player) {
-    const mx = miniX + (player.x / WORLD_W) * miniW;
-    const my = miniY + (player.y / WORLD_H) * miniH;
-    ctx.beginPath();
-    ctx.arc(mx, my, 6, 0, TAU);
-    ctx.fillStyle = "#53c6f7";
-    ctx.fill();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-  // ...existing draw code...
-
+// Your player
+if (player) {
+  const mx = miniX + (player.x / WORLD_W) * miniW;
+  const my = miniY + (player.y / WORLD_H) * miniH;
+  ctx.beginPath();
+  ctx.arc(mx, my, 6, 0, TAU);
+  ctx.fillStyle = "#53c6f7";
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fill();
+}
 ctx.restore(); // End world/camera transform
 
 // Draw crosshair in screen coordinates

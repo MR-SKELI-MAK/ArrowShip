@@ -28,8 +28,8 @@ const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
 const NUM_ISLANDS = 10;
 const NUM_BOTS = 5;
-const MAX_EXP = 30;
-const MAX_HEALTH = 5;
+const MAX_EXP = 500;
+const MAX_HEALTH = 50;
 // --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function rand(a = 0, b = 1) { return a + Math.random() * (b - a); }
@@ -586,11 +586,10 @@ if (healthCount < MAX_HEALTH) {
   const player = gameState.players[pid];
   if (!player) continue;
 
-  // Helper to check if entity is near player
-  const isNear = (e, margin = 800) =>
+  // Increase margin for more vision
+  const isNear = (e, margin = 2000) =>
     Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
 
-  // Filter entities near this player
   const visibleBots = gameState.bots.filter(bot => isNear(bot));
   const visibleBullets = gameState.bullets.filter(b => isNear(b));
   const visibleIslands = gameState.islands.filter(isl => isNear(isl));
@@ -600,7 +599,13 @@ if (healthCount < MAX_HEALTH) {
   for (const opid in gameState.players) {
     if (isNear(gameState.players[opid])) visiblePlayers[opid] = gameState.players[opid];
   }
-
+    const minimapData = {
+  players: Object.values(gameState.players).map(p => ({ x: p.x, y: p.y, id: p.id })),
+  bots: gameState.bots.map(b => ({ x: b.x, y: b.y })),
+  pickups: gameState.pickups.map(p => ({ x: p.x, y: p.y, type: p.type })),
+  islands: gameState.islands.map(i => ({ x: i.x, y: i.y, r: i.r })),
+  teammates: gameState.teammates.map(tm => ({ x: tm.x, y: tm.y }))
+};
   io.to(pid).emit('gameState', {
     players: visiblePlayers,
     bots: visibleBots,
@@ -610,6 +615,7 @@ if (healthCount < MAX_HEALTH) {
     leaderboard: gameState.leaderboard,
     initialBotCount: gameState.initialBotCount,
     teammates: visibleTeammates,
+    minimap: minimapData,
   });
 }
 // Place this BEFORE removing dead players!
