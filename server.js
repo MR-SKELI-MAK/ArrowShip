@@ -587,7 +587,7 @@ if (healthCount < MAX_HEALTH) {
   if (!player) continue;
 
   // Increase margin for more vision
-  const isNear = (e, margin = 2000) =>
+  const isNear = (e, margin = 1800) =>
     Math.abs(e.x - player.x) < margin && Math.abs(e.y - player.y) < margin;
 
   const visibleBots = gameState.bots.filter(bot => isNear(bot));
@@ -736,5 +736,6 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
 gameLoop();
+
 
 
