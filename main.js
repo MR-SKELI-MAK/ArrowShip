@@ -123,7 +123,6 @@ function updateHUD() {
   document.getElementById('ship').innerText = 'Ships:' + (player ? 1 : 0 + bots.length);
   document.getElementById('island').innerText = 'Islands: ' + islands.length;
 }
-
 function isNearPlayer(entity, margin = 400) {
   if (!player) return false;
   return (
@@ -310,6 +309,7 @@ for (let isl of islands) {
   // Bullets
   for (let b of bullets) {
     if (!isNearPlayer(b, 600)) continue;
+
     ctx.beginPath();
     ctx.fillStyle = '#ffd6a5';
     ctx.arc(b.x, b.y, b.r, 0, TAU);
@@ -805,6 +805,22 @@ document.addEventListener('click', () => {
 });
 
 /* --- MOBILE RESPONSIVENESS & JOYSTICK --- */
+
+function requestFullscreenIfMobile() {
+  if (
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) &&
+    document.documentElement.requestFullscreen
+  ) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+// Listen for first user interaction to trigger fullscreen
+document.addEventListener('touchstart', function handler() {
+  requestFullscreenIfMobile();
+  document.removeEventListener('touchstart', handler);
+}, { passive: false });
+
 function isMobile() {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }

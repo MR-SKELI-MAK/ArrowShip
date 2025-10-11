@@ -212,12 +212,7 @@ color: transparent;">
 <audio id="levelUpSound" src="levelup.mp3" preload="auto"></audio>
 <audio id="upgradeSound" src="upraded.mp3" preload="auto"></audio>
 
-  <div id="rotateDeviceOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:#0b1220;color:#fff;align-items:center;justify-content:center;font-size:2em;">
-    <div style="text-align:center;">
-      <i class="fa-solid fa-rotate fa-2x"></i><br>
-      Please rotate your device to <b>landscape</b> to play!
-    </div>
-  </div>
+  
   </div>
   <!-- Joystick for mobile -->
   <div id="joystickContainer">
@@ -246,6 +241,13 @@ color: transparent;">
 </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>
+    
+    <div id="rotateDeviceOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:#0b1220;color:#fff;align-items:center;justify-content:center;font-size:2em;">
+    <div style="text-align:center;">
+      <i class="fa-solid fa-rotate fa-2x"></i><br>
+      Please rotate your device to <b>landscape</b> to play!
+    </div>
+  </div>
 </body>
 </html>
 

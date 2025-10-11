@@ -319,10 +319,10 @@ input[type="range"]#buttonVolumeInGame {
     /* Joystick styles - smaller for mobile */
     #joystickContainer {
       position: fixed;
-      left: 4vw;
+      left: 6vw;
       bottom: 6vw;
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       z-index: 100;
       display: none;
       touch-action: none;
@@ -397,12 +397,6 @@ input[type="range"]#buttonVolumeInGame {
   
 }
 @media (max-width: 600px) {
-   .app, canvas {
-    transform: scale(0.85);
-    transform-origin: top left;
-    width: 100vw !important;
-    height: 100vh !important;
-  }
   body, html {
     overflow: auto !important;
   }
@@ -453,3 +447,11 @@ input[type="range"]#buttonVolumeInGame {
         display: none !important;
       }
     }
+    @media (max-width: 600px) {
+  .app, canvas {
+    transform: scale(0.65); /* was 0.85, now smaller */
+    transform-origin: top left;
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+}
