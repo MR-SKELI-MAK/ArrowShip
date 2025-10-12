@@ -85,8 +85,8 @@ const usernameAboveShipEl = document.getElementById('usernameAboveShip');
 const usernameHudEl = document.getElementById('usernameHud');
 const leaderboardListEl = document.getElementById('leaderboardList');
 const TAU = Math.PI * 2;
-const WORLD_W = 6000;
-const WORLD_H = 6000;
+const WORLD_W = 5000;
+const WORLD_H = 5000;
 let W = canvas.width = innerWidth;
 let H = canvas.height = innerHeight;
 
@@ -852,7 +852,7 @@ let joystickActive = false, joystickDir = {x:0, y:0};
 const joystick = document.getElementById('joystickContainer');
 const knob = document.getElementById('joystickKnob');
 const base = document.getElementById('joystickBase');
-let joyCenter = {x:35, y:35}; // Center for 70x70
+let joyCenter = {x:45, y:45}; // Center for 70x70
 
 function setJoystick(x, y) {
   // Clamp to 25px radius
@@ -867,8 +867,8 @@ function setJoystick(x, y) {
   joystickDir = {x: dx/25, y: dy/25};
 }
 function resetJoystick() {
-  knob.style.left = "18px";
-  knob.style.top = "18px";
+  knob.style.left = "23px";
+  knob.style.top = "23px";
   joystickDir = {x:0, y:0};
 }
 joystick.addEventListener('touchstart', function(e) {

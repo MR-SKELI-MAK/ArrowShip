@@ -70,18 +70,18 @@ function getNearbyEntities(player, type) {
 
 // --- CONSTANTS ---
 const TAU = Math.PI * 2;
-const WORLD_W = 6000;
-const WORLD_H = 6000;
+const WORLD_W = 5000;
+const WORLD_H = 5000;
 const SHIP_COLLISION_RADIUS = 16;
 const BULLET_DAMAGE = 20;
 const BULLET_SPEED = 9;
 const BOT_RELOAD_TIME = 25;
 const LEVEL_POINTS_BASE = 10;
 const TEAMMATE_LVL_REQ = 5;
-const NUM_ISLANDS = 6;
-const NUM_BOTS = 3;
+const NUM_ISLANDS = 5;
+const NUM_BOTS = 2;
 const MAX_EXP = 50;
-const MAX_HEALTH = 10;
+const MAX_HEALTH = 5;
 
 // --- UTILS ---
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
@@ -801,5 +801,4 @@ socket.on('move', (data) => {
  server.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 
 gameLoop();
-
 

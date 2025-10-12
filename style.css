@@ -319,7 +319,7 @@ input[type="range"]#buttonVolumeInGame {
     /* Joystick styles - smaller for mobile */
     #joystickContainer {
       position: fixed;
-      left: 6vw;
+      left: 4vw;
       bottom: 6vw;
       width: 80px;
       height: 80px;
@@ -341,7 +341,7 @@ input[type="range"]#buttonVolumeInGame {
       background: rgba(80,180,255,0.7);
       border-radius: 50%;
       position: absolute;
-      left: 18px; top: 18px;
+      left: 24px; top: 24px;
       transition: left 0.08s, top 0.08s;
       touch-action: none;
     } a{
