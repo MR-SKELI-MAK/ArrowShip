@@ -808,10 +808,16 @@ document.addEventListener('click', () => {
 
 function requestFullscreenIfMobile() {
   if (
-    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) &&
-    document.documentElement.requestFullscreen
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
   ) {
-    document.documentElement.requestFullscreen();
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen();
+    } else if (docEl.webkitRequestFullscreen) { // Safari
+      docEl.webkitRequestFullscreen();
+    } else if (docEl.msRequestFullscreen) { // IE11
+      docEl.msRequestFullscreen();
+    }
   }
 }
 
@@ -819,6 +825,16 @@ function requestFullscreenIfMobile() {
 document.addEventListener('touchstart', function handler() {
   requestFullscreenIfMobile();
   document.removeEventListener('touchstart', handler);
+}, { passive: false });
+
+document.addEventListener('touchstart', function handler() {
+  requestFullscreenIfMobile();
+  document.removeEventListener('touchstart', handler);
+}, { passive: false });
+
+document.addEventListener('click', function handler() {
+  requestFullscreenIfMobile();
+  document.removeEventListener('click', handler);
 }, { passive: false });
 
 function isMobile() {
